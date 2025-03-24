@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'recipe.dart';
+import 'groceries.dart';
+import 'favorite.dart';
 
 void main() {
   runApp(const MyApp());
@@ -23,7 +26,6 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
   final String title;
 
   @override
@@ -51,12 +53,14 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const RecipePage()),
+                );
+              },
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 90,
-                  vertical: 50,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 90, vertical: 50),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -68,33 +72,32 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const GroceriesPage()),
+                );
+              },
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 90,
-                  vertical: 50,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 90, vertical: 50),
               ),
               child: const Text('Groceries'),
             ),
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const FavoritePage()),
+                );
+              },
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 90,
-                  vertical: 50,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 90, vertical: 50),
               ),
               child: const Text('Favorite Recipes'),
             ),
             const Text('Deal with your meal in much easier way.'),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.arrow_forward_ios_outlined),
       ),
     );
   }
