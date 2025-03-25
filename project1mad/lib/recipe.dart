@@ -136,24 +136,40 @@ class _RecipePageState extends State<RecipePage> {
   void _showAddRecipeDialog() {
     final _recipeNameController = TextEditingController();
     final _instructionController = TextEditingController();
+    final _prepTimeController = TextEditingController();
+    final _ingredientsController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('Add New Recipe'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _recipeNameController,
-                decoration: const InputDecoration(labelText: 'Recipe Name'),
+          content: ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 300, maxWidth: 400),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: _recipeNameController,
+                    decoration: const InputDecoration(labelText: 'Recipe Name'),
+                  ),
+                  TextField(
+                    controller: _prepTimeController,
+                    decoration: const InputDecoration(labelText: 'Preparation Time'),
+                  ),
+                  TextField(
+                    controller: _ingredientsController,
+                    decoration: const InputDecoration(labelText: 'Ingredients'),
+                  ),
+                  TextField(
+                    controller: _instructionController,
+                    decoration: const InputDecoration(labelText: 'Instructions'),
+                    maxLines: 3,
+                  ),
+                ],
               ),
-              TextField(
-                controller: _instructionController,
-                decoration: const InputDecoration(labelText: 'Instructions'),
-              ),
-            ],
+            ),
           ),
           actions: [
             TextButton(
@@ -164,14 +180,16 @@ class _RecipePageState extends State<RecipePage> {
               onPressed: () {
                 final name = _recipeNameController.text.trim();
                 final instructions = _instructionController.text.trim();
+                final prepTime = _prepTimeController.text.trim();
+                final ingredients = _ingredientsController.text.trim();
 
-                if (name.isNotEmpty && instructions.isNotEmpty) {
+                if (name.isNotEmpty && instructions.isNotEmpty && prepTime.isNotEmpty && ingredients.isNotEmpty) {
                   setState(() {
                     recipeByCategory['Custom']!.add({
                       'name': name,
                       'instruction': instructions,
-                      'prepTime': 'Unknown',
-                      'ingredients': 'Custom ingredients',
+                      'prepTime': prepTime,
+                      'ingredients': ingredients,
                     });
                   });
                 }
@@ -185,6 +203,7 @@ class _RecipePageState extends State<RecipePage> {
       },
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -295,7 +314,13 @@ class _RecipePageState extends State<RecipePage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Instructions:', style: TextStyle(fontWeight: FontWeight.bold)),
+                            const Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                'Instructions:',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
                             ...recipe['instruction']
                                 .toString()
                                 .split('.')
@@ -303,7 +328,15 @@ class _RecipePageState extends State<RecipePage> {
                                 .toList()
                                 .asMap()
                                 .entries
-                                .map((entry) => Text('${entry.key + 1}. ${entry.value.trim()}.', textAlign: TextAlign.left)),
+                                .map(
+                                  (entry) => Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      '${entry.key + 1}. ${entry.value.trim()}.',
+                                      textAlign: TextAlign.left,
+                                    ),
+                                  ),
+                                ),
                           ],
                         ),
                       ),
