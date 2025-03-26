@@ -164,10 +164,9 @@ class _RecipePageState extends State<RecipePage> {
   @override
   void initState() {
     super.initState();
-    _loadCustomRecipes(); // Load custom recipes when the page is initialized
+    _loadCustomRecipes();
   }
 
-  // Load recipes saved by the user
   Future<void> _loadCustomRecipes() async {
     try {
       final recipes = await DatabaseHelper.instance.getCustomRecipesByUser(
@@ -185,13 +184,11 @@ class _RecipePageState extends State<RecipePage> {
               };
             }).toList();
       });
-      print("Custom recipes loaded: ${recipeByCategory['Custom']}");
     } catch (e) {
       print("Error loading custom recipes: $e");
     }
   }
 
-  // Add a recipe to the database and reload custom recipes
   Future<void> _addRecipeToDatabase(
     String name,
     String instructions,
@@ -215,36 +212,32 @@ class _RecipePageState extends State<RecipePage> {
       );
 
       final id = await DatabaseHelper.instance.insertRecipe(recipe);
-      print("Recipe added with ID: $id");
-      _loadCustomRecipes(); // Reload recipes after insertion
+      _loadCustomRecipes();
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Recipe added successfully!")),
       );
     } catch (e) {
-      print("Error inserting recipe: $e");
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Failed to add recipe: $e")));
     }
   }
 
-  // Delete a custom recipe from the database
   void _deleteCustomRecipe(int id) async {
     try {
       await DatabaseHelper.instance.deleteRecipe(id);
-      _loadCustomRecipes(); // Reload after deleting the recipe
+      _loadCustomRecipes();
     } catch (e) {
       print("Error deleting recipe: $e");
     }
   }
 
-  // Show dialog to add a new recipe
   void _showAddRecipeDialog() {
-    final _recipeNameController = TextEditingController();
-    final _instructionController = TextEditingController();
-    final _prepTimeController = TextEditingController();
-    final _ingredientsController = TextEditingController();
+    final recipeNameController = TextEditingController();
+    final instructionController = TextEditingController();
+    final prepTimeController = TextEditingController();
+    final ingredientsController = TextEditingController();
 
     showDialog(
       context: context,
@@ -256,21 +249,21 @@ class _RecipePageState extends State<RecipePage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
-                  controller: _recipeNameController,
+                  controller: recipeNameController,
                   decoration: const InputDecoration(labelText: 'Recipe Name'),
                 ),
                 TextField(
-                  controller: _prepTimeController,
+                  controller: prepTimeController,
                   decoration: const InputDecoration(
                     labelText: 'Preparation Time',
                   ),
                 ),
                 TextField(
-                  controller: _ingredientsController,
+                  controller: ingredientsController,
                   decoration: const InputDecoration(labelText: 'Ingredients'),
                 ),
                 TextField(
-                  controller: _instructionController,
+                  controller: instructionController,
                   decoration: const InputDecoration(labelText: 'Instructions'),
                   maxLines: 3,
                 ),
@@ -284,10 +277,10 @@ class _RecipePageState extends State<RecipePage> {
             ),
             ElevatedButton(
               onPressed: () async {
-                final name = _recipeNameController.text.trim();
-                final instructions = _instructionController.text.trim();
-                final prepTime = _prepTimeController.text.trim();
-                final ingredients = _ingredientsController.text.trim();
+                final name = recipeNameController.text.trim();
+                final instructions = instructionController.text.trim();
+                final prepTime = prepTimeController.text.trim();
+                final ingredients = ingredientsController.text.trim();
 
                 if (name.isNotEmpty &&
                     instructions.isNotEmpty &&
@@ -299,7 +292,7 @@ class _RecipePageState extends State<RecipePage> {
                     prepTime,
                     ingredients,
                   );
-                  Navigator.of(context).pop(); // Close the dialog
+                  Navigator.of(context).pop();
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text("Please fill all fields")),
@@ -414,36 +407,45 @@ class _RecipePageState extends State<RecipePage> {
                         children: [
                           Padding(
                             padding: const EdgeInsets.all(8.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Preparation time: ${recipe['prepTime']}",
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  "Ingredients: ${recipe['ingredients']}",
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  "Instructions:",
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                ...recipe['instruction']
-                                    .toString()
-                                    .split('.')
-                                    .where((step) => step.trim().isNotEmpty)
-                                    .toList()
-                                    .asMap()
-                                    .entries
-                                    .map(
-                                      (entry) => Text(
-                                        "${entry.key + 1}. ${entry.value.trim()}.",
-                                      ),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Preparation time: ${recipe['prepTime']}",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
                                     ),
-                              ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    "Ingredients: ${recipe['ingredients']}",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  const Text(
+                                    "Instructions:",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  ...recipe['instruction']
+                                      .toString()
+                                      .split('.')
+                                      .where((step) => step.trim().isNotEmpty)
+                                      .toList()
+                                      .asMap()
+                                      .entries
+                                      .map(
+                                        (entry) => Text(
+                                          "${entry.key + 1}. ${entry.value.trim()}.",
+                                        ),
+                                      ),
+                                ],
+                              ),
                             ),
                           ),
                           if (category == 'Custom')
