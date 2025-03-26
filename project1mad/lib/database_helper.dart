@@ -1,42 +1,87 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
+/// === RECIPE MODEL ===
 class Recipe {
   final int? id;
   final String name;
   final String instructions;
+  final String prepTime;
+  final String ingredients;
+  final int userId;
 
-  Recipe({this.id, required this.name, required this.instructions});
+  Recipe({
+    this.id,
+    required this.name,
+    required this.instructions,
+    required this.prepTime,
+    required this.ingredients,
+    required this.userId,
+  });
 
-  // Convert a Recipe to a Map (for storing in the database)
   Map<String, dynamic> toMap() {
-    return {'id': id, 'name': name, 'instructions': instructions};
+    return {
+      'id': id,
+      'name': name,
+      'instructions': instructions,
+      'prepTime': prepTime,
+      'ingredients': ingredients,
+      'userId': userId,
+    };
   }
 
-  // Convert a Map to a Recipe (for reading from the database)
   factory Recipe.fromMap(Map<String, dynamic> map) {
     return Recipe(
       id: map['id'],
       name: map['name'],
       instructions: map['instructions'],
+      prepTime: map['prepTime'],
+      ingredients: map['ingredients'],
+      userId: map['userId'],
     );
   }
 }
 
+/// === USER MODEL ===
+class User {
+  final int? id;
+  final String name;
+  final String email;
+  final String password;
+
+  User({
+    this.id,
+    required this.name,
+    required this.email,
+    required this.password,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {'id': id, 'name': name, 'email': email, 'password': password};
+  }
+
+  factory User.fromMap(Map<String, dynamic> map) {
+    return User(
+      id: map['id'],
+      name: map['name'],
+      email: map['email'],
+      password: map['password'],
+    );
+  }
+}
+
+/// === DATABASE HELPER ===
 class DatabaseHelper {
-  static const _databaseName = "recipes.db";
-  static const _databaseVersion = 1;
+  static const _databaseName = "app_database.db";
+  static const _databaseVersion = 2; // 🔼 Upgraded from 1 to 2
 
-  static const table = 'recipes';
-  static const columnId = 'id';
-  static const columnName = 'name';
-  static const columnInstructions = 'instructions';
-
-  // Singleton instance
-  static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
-  static Database? _database;
+  static const customRecipeTable = 'custom_recipes';
+  static const userTable = 'users';
 
   DatabaseHelper._privateConstructor();
+  static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
+
+  static Database? _database;
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -47,50 +92,116 @@ class DatabaseHelper {
   Future<Database> _initDatabase() async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, _databaseName);
+
     return await openDatabase(
       path,
       version: _databaseVersion,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
   Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE $table (
-        $columnId INTEGER PRIMARY KEY AUTOINCREMENT,
-        $columnName TEXT NOT NULL,
-        $columnInstructions TEXT NOT NULL
+      CREATE TABLE $userTable (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE $customRecipeTable (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        instructions TEXT NOT NULL,
+        prepTime TEXT NOT NULL,
+        ingredients TEXT NOT NULL,
+        userId INTEGER NOT NULL,
+        FOREIGN KEY (userId) REFERENCES $userTable(id)
       )
     ''');
   }
 
-  // Insert a new recipe
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+        ALTER TABLE $customRecipeTable ADD COLUMN userId INTEGER NOT NULL DEFAULT 1
+      ''');
+    }
+  }
+
+  // === Recipe CRUD ===
   Future<int> insertRecipe(Recipe recipe) async {
     final db = await database;
-    return await db.insert(table, recipe.toMap());
+    return await db.insert(customRecipeTable, recipe.toMap());
   }
 
-  // Get all recipes
-  Future<List<Recipe>> getAllRecipes() async {
-    final db = await database;
-    final result = await db.query(table);
-    return result.map((map) => Recipe.fromMap(map)).toList();
-  }
-
-  // Update an existing recipe
   Future<int> updateRecipe(Recipe recipe) async {
     final db = await database;
     return await db.update(
-      table,
+      customRecipeTable,
       recipe.toMap(),
-      where: '$columnId = ?',
+      where: 'id = ?',
       whereArgs: [recipe.id],
     );
   }
 
-  // Delete a recipe
+  Future<List<Recipe>> getAllCustomRecipes() async {
+    final db = await database;
+    final result = await db.query(customRecipeTable);
+    return result.map((map) => Recipe.fromMap(map)).toList();
+  }
+
+  Future<List<Recipe>> getCustomRecipesByUser(int userId) async {
+    final db = await database;
+    final result = await db.query(
+      customRecipeTable,
+      where: 'userId = ?',
+      whereArgs: [userId],
+    );
+    return result.map((map) => Recipe.fromMap(map)).toList();
+  }
+
   Future<int> deleteRecipe(int id) async {
     final db = await database;
-    return await db.delete(table, where: '$columnId = ?', whereArgs: [id]);
+    return await db.delete(customRecipeTable, where: 'id = ?', whereArgs: [id]);
+  }
+
+  // === User CRUD ===
+  Future<int> insertUser(User user) async {
+    final db = await database;
+    return await db.insert(userTable, user.toMap());
+  }
+
+  Future<User?> getUserByEmail(String email) async {
+    final db = await database;
+    final result = await db.query(
+      userTable,
+      where: 'email = ?',
+      whereArgs: [email],
+    );
+
+    if (result.isNotEmpty) {
+      return User.fromMap(result.first);
+    } else {
+      return null;
+    }
+  }
+
+  Future<int> updateUser(User user) async {
+    final db = await database;
+    return await db.update(
+      userTable,
+      user.toMap(),
+      where: 'id = ?',
+      whereArgs: [user.id],
+    );
+  }
+
+  Future<int> deleteUser(int id) async {
+    final db = await database;
+    return await db.delete(userTable, where: 'id = ?', whereArgs: [id]);
   }
 }

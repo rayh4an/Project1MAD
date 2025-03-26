@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'recipe.dart';
 import 'groceries.dart';
 import 'favorite.dart';
+import 'loginpage.dart';
+import 'database_helper.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,32 +16,41 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Meal Prep',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color.fromARGB(255, 152, 11, 11),
         ),
       ),
-      home: const MyHomePage(title: 'Home page'),
+      home: const LoginPage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class MyHomePage extends StatelessWidget {
+  final User currentUser;
+
+  const MyHomePage({super.key, required this.title, required this.currentUser});
 
   final String title;
 
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+        title: Text(title),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginPage()),
+              );
+            },
+          ),
+        ],
       ),
       body: Center(
         child: Column(
@@ -53,7 +64,9 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const RecipePage()),
+                  MaterialPageRoute(
+                    builder: (context) => RecipePage(currentUser: currentUser),
+                  ),
                 );
               },
               style: ElevatedButton.styleFrom(
