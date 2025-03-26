@@ -161,6 +161,48 @@ class _RecipePageState extends State<RecipePage> {
   final Color thirdColor = const Color.fromARGB(255, 50, 50, 50);
   final Color backgroundColor = const Color.fromARGB(255, 250, 244, 236);
 
+  final List<Map<String, dynamic>> favoriteRecipes = [];
+  final List<String> groceryList = [];
+  final Set<String> favoritedRecipeNames = {};
+  final Set<String> groceryIngredientKeys = {};
+
+  void _toggleFavorite(Map<String, dynamic> recipe) {
+    final name = recipe['name'];
+    setState(() {
+      if (favoritedRecipeNames.contains(name)) {
+        favoritedRecipeNames.remove(name);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Removed from favorites')));
+      } else {
+        favoritedRecipeNames.add(name);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Added to favorites')));
+      }
+    });
+  }
+
+  void _toggleGroceries(String ingredients) {
+    final key = ingredients.trim();
+    final items = ingredients.split(',').map((e) => e.trim()).toList();
+    setState(() {
+      if (groceryIngredientKeys.contains(key)) {
+        groceryIngredientKeys.remove(key);
+        groceryList.removeWhere((item) => items.contains(item));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Removed from groceries')));
+      } else {
+        groceryIngredientKeys.add(key);
+        groceryList.addAll(items);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Added to groceries')));
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -432,6 +474,13 @@ class _RecipePageState extends State<RecipePage> {
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
+                                  const Text(
+                                    "Instructions:",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
                                   ...recipe['instruction']
                                       .toString()
                                       .split('.')
@@ -444,6 +493,78 @@ class _RecipePageState extends State<RecipePage> {
                                           "${entry.key + 1}. ${entry.value.trim()}.",
                                         ),
                                       ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      ElevatedButton.icon(
+                                        onPressed:
+                                            () => _toggleFavorite(recipe),
+                                        icon: Icon(
+                                          favoritedRecipeNames.contains(
+                                                recipe['name'],
+                                              )
+                                              ? Icons.favorite
+                                              : Icons.favorite_border,
+                                          color: Colors.white,
+                                        ),
+                                        label: const Text(
+                                          'Favorite',
+                                          style: TextStyle(color: Colors.black),
+                                        ),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor:
+                                              favoritedRecipeNames.contains(
+                                                    recipe['name'],
+                                                  )
+                                                  ? const Color.fromARGB(
+                                                    255,
+                                                    224,
+                                                    69,
+                                                    58,
+                                                  )
+                                                  : const Color.fromARGB(
+                                                    255,
+                                                    124,
+                                                    124,
+                                                    124,
+                                                  ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      ElevatedButton.icon(
+                                        onPressed:
+                                            () => _toggleGroceries(
+                                              recipe['ingredients'],
+                                            ),
+                                        icon: Icon(
+                                          Icons.shopping_cart,
+                                          color: Colors.white,
+                                        ),
+                                        label: Text(
+                                          'Groceries',
+                                          style: TextStyle(color: Colors.black),
+                                        ),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor:
+                                              groceryIngredientKeys.contains(
+                                                    recipe['ingredients'],
+                                                  )
+                                                  ? const Color.fromARGB(
+                                                    255,
+                                                    101,
+                                                    239,
+                                                    106,
+                                                  )
+                                                  : const Color.fromARGB(
+                                                    255,
+                                                    124,
+                                                    124,
+                                                    124,
+                                                  ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ],
                               ),
                             ),
