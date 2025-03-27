@@ -73,7 +73,7 @@ class User {
 /// === DATABASE HELPER ===
 class DatabaseHelper {
   static const _databaseName = "app_database.db";
-  static const _databaseVersion = 2; // 🔼 Upgraded from 1 to 2
+  static const _databaseVersion = 4; // 🔼 Upgraded from 1 to 2
 
   static const customRecipeTable = 'custom_recipes';
   static const userTable = 'users';
@@ -122,6 +122,16 @@ class DatabaseHelper {
         FOREIGN KEY (userId) REFERENCES $userTable(id)
       )
     ''');
+
+    await db.execute('''
+  CREATE TABLE groceries (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    userId INTEGER NOT NULL,
+    recipeName TEXT NOT NULL,
+    item TEXT NOT NULL,
+    FOREIGN KEY (userId) REFERENCES users(id)
+  )
+''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -169,6 +179,15 @@ class DatabaseHelper {
     return await db.delete(customRecipeTable, where: 'id = ?', whereArgs: [id]);
   }
 
+  Future<void> deleteRecipeById(int id) async {
+    final db = await database;
+    await db.delete(
+      customRecipeTable, // ✅ use your actual table name here
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
   // === User CRUD ===
   Future<int> insertUser(User user) async {
     final db = await database;
@@ -204,4 +223,52 @@ class DatabaseHelper {
     final db = await database;
     return await db.delete(userTable, where: 'id = ?', whereArgs: [id]);
   }
+
+  Future<Map<String, List<String>>> getGroceriesByUser(int userId) async {
+    final db = await database;
+    final result = await db.query(
+      'groceries',
+      where: 'userId = ?',
+      whereArgs: [userId],
+    );
+
+    Map<String, List<String>> groceryMap = {};
+    for (var row in result) {
+      final recipe = row['recipeName'] as String;
+      final item = row['item'] as String;
+      groceryMap.putIfAbsent(recipe, () => []).add(item);
+    }
+
+    return groceryMap;
+  }
+
+  // Add grocery item to database
+  Future<void> addGroceryItem(
+    int userId,
+    String recipeName,
+    String item,
+  ) async {
+    final db = await database;
+    await db.insert('groceries', {
+      'userId': userId,
+      'recipeName': recipeName,
+      'item': item,
+    });
+  }
+
+  // Remove grocery item from database
+  Future<void> removeGroceryItem(
+    int userId,
+    String recipeName,
+    String item,
+  ) async {
+    final db = await database;
+    await db.delete(
+      'groceries',
+      where: 'userId = ? AND recipeName = ? AND item = ?',
+      whereArgs: [userId, recipeName, item],
+    );
+  }
+
+  // Load all grocery items for a user
 }

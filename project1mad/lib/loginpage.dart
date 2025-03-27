@@ -46,7 +46,7 @@ class _LoginPageState extends State<LoginPage> {
         MaterialPageRoute(
           builder:
               (_) => MyHomePage(
-                title: 'Welcome $name',
+                title: '$name ($email)',
                 currentUser: user.copyWith(id: userId),
               ),
         ),
@@ -63,7 +63,7 @@ class _LoginPageState extends State<LoginPage> {
         MaterialPageRoute(
           builder:
               (_) =>
-                  MyHomePage(title: 'Welcome ${user.name}', currentUser: user),
+                  MyHomePage(title: 'Welcome, ${user.name}', currentUser: user),
         ),
       );
     }
