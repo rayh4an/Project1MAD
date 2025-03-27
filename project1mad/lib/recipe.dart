@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'database_helper.dart';
 
+enum FilterOption { all, vegetarian, nonVegetarian }
+
 class RecipePage extends StatefulWidget {
   final User currentUser;
-  const RecipePage({super.key, required this.currentUser});
+  RecipePage({super.key, required this.currentUser});
 
   @override
   State<RecipePage> createState() => _RecipePageState();
 }
 
 class _RecipePageState extends State<RecipePage> {
+  FilterOption _filterOption = FilterOption.all;
   final List<String> categories = [
     'American (North + South)',
     'European',
@@ -295,12 +298,18 @@ class _RecipePageState extends State<RecipePage> {
     }
   }
 
-  void _deleteCustomRecipe(int id) async {
+  Future<void> _deleteCustomRecipe(Map<String, dynamic> recipe) async {
     try {
-      await DatabaseHelper.instance.deleteRecipe(id);
-      _loadCustomRecipes();
+      final id = recipe['id'];
+      await DatabaseHelper.instance.deleteRecipeById(id);
+      setState(() {
+        recipeByCategory['Custom']!.removeWhere((r) => r['id'] == id);
+      });
     } catch (e) {
-      print("Error deleting recipe: $e");
+      print('Error deleting recipe: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to delete recipe: $e')));
     }
   }
 
@@ -454,174 +463,278 @@ class _RecipePageState extends State<RecipePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Recipes'),
+        title: const Text('Recipes with Filters:'),
         backgroundColor: primaryColor,
       ),
       body: Container(
         color: backgroundColor,
-        child: ListView(
-          children:
-              categories.map((category) {
-                return ExpansionTile(
-                  title: Text(
-                    category,
-                    style: TextStyle(color: secondaryColor),
+        child: Column(
+          children: [
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color:
+                        _filterOption == FilterOption.all
+                            ? Colors.lightBlueAccent
+                            : Colors.grey[300],
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  children: [
-                    ...recipeByCategory[category]!.map((recipe) {
-                      final recipeName = recipe['name']!;
+                  child: IconButton(
+                    onPressed:
+                        () => setState(() => _filterOption = FilterOption.all),
+                    icon: const Text("All:", style: TextStyle(fontSize: 18)),
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Container(
+                  decoration: BoxDecoration(
+                    color:
+                        _filterOption == FilterOption.vegetarian
+                            ? Colors.lightGreen
+                            : Colors.grey[300],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: IconButton(
+                    onPressed:
+                        () => setState(
+                          () => _filterOption = FilterOption.vegetarian,
+                        ),
+                    icon: const Text(
+                      "Vegetarian: 🌱",
+                      style: TextStyle(fontSize: 18),
+                    ),
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Container(
+                  decoration: BoxDecoration(
+                    color:
+                        _filterOption == FilterOption.nonVegetarian
+                            ? Colors.deepOrange
+                            : Colors.grey[300],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: IconButton(
+                    onPressed:
+                        () => setState(
+                          () => _filterOption = FilterOption.nonVegetarian,
+                        ),
+                    icon: const Text(
+                      "Non-vegetarian: 🥩",
+                      style: TextStyle(fontSize: 18),
+                    ),
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Expanded(
+              child: ListView(
+                children:
+                    categories.map((category) {
+                      final allRecipes = recipeByCategory[category]!;
+                      final filteredRecipes =
+                          category == 'Custom'
+                              ? allRecipes
+                              : allRecipes.where((recipe) {
+                                final ingredients =
+                                    recipe['ingredients']
+                                        .toString()
+                                        .toLowerCase();
+                                if (_filterOption == FilterOption.vegetarian) {
+                                  return !ingredients.contains('beef') &&
+                                      !ingredients.contains('chicken') &&
+                                      !ingredients.contains('mutton') &&
+                                      !ingredients.contains('fish') &&
+                                      !ingredients.contains('shrimp') &&
+                                      !ingredients.contains('bacon') &&
+                                      !ingredients.contains('meat');
+                                } else if (_filterOption ==
+                                    FilterOption.nonVegetarian) {
+                                  return ingredients.contains('beef') ||
+                                      ingredients.contains('chicken') ||
+                                      ingredients.contains('mutton') ||
+                                      ingredients.contains('fish') ||
+                                      ingredients.contains('shrimp') ||
+                                      ingredients.contains('bacon') ||
+                                      ingredients.contains('meat');
+                                }
+                                return true;
+                              }).toList();
+
                       return ExpansionTile(
                         title: Text(
-                          recipeName,
-                          style: TextStyle(color: thirdColor),
+                          category,
+                          style: TextStyle(color: secondaryColor),
                         ),
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Preparation time: ${recipe['prepTime']}",
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    "Ingredients: ${recipe['ingredients']}",
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  const Text(
-                                    "Instructions:",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const Text(
-                                    "Instructions:",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  ...recipe['instruction']
-                                      .toString()
-                                      .split('.')
-                                      .where((step) => step.trim().isNotEmpty)
-                                      .toList()
-                                      .asMap()
-                                      .entries
-                                      .map(
-                                        (entry) => Text(
-                                          "${entry.key + 1}. ${entry.value.trim()}.",
+                          ...filteredRecipes.map((recipe) {
+                            final recipeName = recipe['name']!;
+                            return ExpansionTile(
+                              title: Text(
+                                recipeName,
+                                style: TextStyle(color: thirdColor),
+                              ),
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Preparation time: ${recipe['prepTime']}",
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      ElevatedButton.icon(
-                                        onPressed:
-                                            () => _toggleFavorite(recipe),
-                                        icon: Icon(
-                                          favoritedRecipeNames.contains(
-                                                recipe['name'],
-                                              )
-                                              ? Icons.favorite
-                                              : Icons.favorite_border,
-                                          color: Colors.white,
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        "Ingredients: ${recipe['ingredients']}",
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
                                         ),
-                                        label: const Text(
-                                          'Favorite',
-                                          style: TextStyle(color: Colors.black),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      const Text(
+                                        "Instructions:",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
                                         ),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor:
+                                      ),
+                                      const SizedBox(height: 4),
+                                      ...recipe['instruction']
+                                          .toString()
+                                          .split('.')
+                                          .where(
+                                            (step) => step.trim().isNotEmpty,
+                                          )
+                                          .toList()
+                                          .asMap()
+                                          .entries
+                                          .map(
+                                            (entry) => Text(
+                                              "${entry.key + 1}. ${entry.value.trim()}",
+                                            ),
+                                          ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          ElevatedButton.icon(
+                                            onPressed:
+                                                () => _toggleFavorite(recipe),
+                                            icon: Icon(
                                               favoritedRecipeNames.contains(
                                                     recipe['name'],
                                                   )
-                                                  ? const Color.fromARGB(
-                                                    255,
-                                                    224,
-                                                    69,
-                                                    58,
-                                                  )
-                                                  : const Color.fromARGB(
-                                                    255,
-                                                    124,
-                                                    124,
-                                                    124,
-                                                  ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      ElevatedButton.icon(
-                                        onPressed:
-                                            () => _toggleGroceries(
-                                              recipe['name'],
-                                              recipe['ingredients'],
+                                                  ? Icons.favorite
+                                                  : Icons.favorite_border,
+                                              color: Colors.white,
                                             ),
-                                        icon: const Icon(
-                                          Icons.shopping_cart,
-                                          color: Colors.black,
-                                        ),
-                                        label: const Text(
-                                          'Groceries',
-                                          style: TextStyle(color: Colors.black),
-                                        ),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              groceryAddedRecipeNames.contains(
-                                                    recipe['name'],
-                                                  )
-                                                  ? Colors.green
-                                                  : Colors.grey[300],
-                                        ),
+                                            label: const Text(
+                                              'Favorite',
+                                              style: TextStyle(
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor:
+                                                  favoritedRecipeNames.contains(
+                                                        recipe['name'],
+                                                      )
+                                                      ? const Color.fromARGB(
+                                                        255,
+                                                        224,
+                                                        69,
+                                                        58,
+                                                      )
+                                                      : const Color.fromARGB(
+                                                        255,
+                                                        124,
+                                                        124,
+                                                        124,
+                                                      ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          ElevatedButton.icon(
+                                            onPressed:
+                                                () => _toggleGroceries(
+                                                  recipe['name'],
+                                                  recipe['ingredients'],
+                                                ),
+                                            icon: const Icon(
+                                              Icons.shopping_cart,
+                                              color: Colors.black,
+                                            ),
+                                            label: const Text(
+                                              'Groceries',
+                                              style: TextStyle(
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor:
+                                                  groceryAddedRecipeNames
+                                                          .contains(
+                                                            recipe['name'],
+                                                          )
+                                                      ? Colors.green
+                                                      : Colors.grey[300],
+                                            ),
+                                          ),
+                                        ],
                                       ),
+                                      if (category == 'Custom')
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          children: [
+                                            TextButton.icon(
+                                              onPressed:
+                                                  () => _showEditRecipeDialog(
+                                                    recipe,
+                                                  ),
+                                              icon: const Icon(Icons.edit),
+                                              label: const Text('Edit'),
+                                            ),
+                                            TextButton.icon(
+                                              onPressed:
+                                                  () => _deleteCustomRecipe(
+                                                    recipe,
+                                                  ),
+                                              icon: const Icon(Icons.delete),
+                                              label: const Text('Delete'),
+                                              style: TextButton.styleFrom(
+                                                foregroundColor: Colors.red,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                     ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          if (category == 'Custom')
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                TextButton.icon(
-                                  onPressed:
-                                      () => _showEditRecipeDialog(recipe),
-                                  icon: const Icon(Icons.edit),
-                                  label: const Text('Edit'),
-                                ),
-                                TextButton.icon(
-                                  onPressed:
-                                      () => _deleteCustomRecipe(recipe['id']),
-                                  icon: const Icon(Icons.delete),
-                                  label: const Text('Delete'),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: Colors.red,
                                   ),
                                 ),
                               ],
+                            );
+                          }).toList(),
+                          if (category == 'Custom')
+                            ListTile(
+                              leading: const Icon(Icons.add),
+                              title: const Text('Add Recipe'),
+                              onTap: _showAddRecipeDialog,
                             ),
                         ],
                       );
                     }).toList(),
-                    if (category == 'Custom')
-                      ListTile(
-                        leading: const Icon(Icons.add),
-                        title: const Text('Add Recipe'),
-                        onTap: _showAddRecipeDialog,
-                      ),
-                  ],
-                );
-              }).toList(),
+              ),
+            ),
+          ],
         ),
       ),
     );

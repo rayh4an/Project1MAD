@@ -179,6 +179,15 @@ class DatabaseHelper {
     return await db.delete(customRecipeTable, where: 'id = ?', whereArgs: [id]);
   }
 
+  Future<void> deleteRecipeById(int id) async {
+    final db = await database;
+    await db.delete(
+      customRecipeTable, // ✅ use your actual table name here
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
   // === User CRUD ===
   Future<int> insertUser(User user) async {
     final db = await database;

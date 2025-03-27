@@ -148,7 +148,7 @@ class MyHomePage extends StatelessWidget {
                     },
                     icon: const Icon(Icons.shopping_cart, size: 30),
                     label: const Text(
-                      'Groceries',
+                      'Grocery',
                       style: TextStyle(fontSize: 24),
                     ),
                     style: ElevatedButton.styleFrom(
