@@ -80,7 +80,7 @@ class MyHomePage extends StatelessWidget {
               children: <Widget>[
                 const SizedBox(height: 20),
                 Text(
-                  '${DateTime.now().toLocal().toString().split(" ")[0]} - ${_getWeekday(DateTime.now().weekday)}',
+                  'Today is: ${DateTime.now().toLocal().toString().split(" ")[0]} - ${_getWeekday(DateTime.now().weekday)}',
                   style: const TextStyle(
                     fontSize: 20,
                     color: Color.fromARGB(255, 7, 7, 7),
@@ -169,7 +169,9 @@ class MyHomePage extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const FavoritePage(),
+                          builder:
+                              (context) =>
+                                  FavoritePage(currentUser: currentUser),
                         ),
                       );
                     },

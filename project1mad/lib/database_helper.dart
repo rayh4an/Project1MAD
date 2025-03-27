@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'recipe.dart';
 
 /// === RECIPE MODEL ===
 class Recipe {
@@ -122,6 +123,14 @@ class DatabaseHelper {
         FOREIGN KEY (userId) REFERENCES $userTable(id)
       )
     ''');
+    await db.execute('''
+  CREATE TABLE favorites (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    recipe_name TEXT NOT NULL,
+    UNIQUE(user_id, recipe_name)
+  )
+''');
 
     await db.execute('''
   CREATE TABLE groceries (
@@ -270,5 +279,55 @@ class DatabaseHelper {
     );
   }
 
-  // Load all grocery items for a user
+  // Add to favorites
+  Future<void> addFavorite(int userId, String recipeName) async {
+    final db = await database;
+    await db.insert('favorites', {
+      'user_id': userId,
+      'recipe_name': recipeName,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+
+  Future<void> removeFavorite(int userId, String recipeName) async {
+    final db = await database;
+    await db.delete(
+      'favorites',
+      where: 'user_id = ? AND recipe_name = ?',
+      whereArgs: [userId, recipeName],
+    );
+  }
+
+  Future<List<String>> getFavoritesByUser(int userId) async {
+    final db = await database;
+    final result = await db.query(
+      'favorites',
+      where: 'user_id = ?',
+      whereArgs: [userId],
+    );
+    return result.map((row) => row['recipe_name'] as String).toList();
+  }
+
+  Future<List<Map<String, dynamic>>> getAllRecipesForUser(int userId) async {
+    final db = await database;
+
+    // Load user-created custom recipes
+    final customRecipes = await db.query(
+      'custom_recipes',
+      where: 'userId = ?',
+      whereArgs: [userId],
+    );
+
+    // Get all hardcoded recipes from recipeByCategory
+    List<Map<String, dynamic>> hardcodedRecipes = [];
+    recipeByCategory.forEach((category, recipes) {
+      for (var r in recipes) {
+        hardcodedRecipes.add(r);
+      }
+    });
+
+    return [...hardcodedRecipes, ...customRecipes];
+  }
 }
+
+  // Load all grocery items for a user
+
