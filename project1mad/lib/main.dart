@@ -29,10 +29,30 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatelessWidget {
   final User currentUser;
+  final String title;
 
   const MyHomePage({super.key, required this.title, required this.currentUser});
 
-  final String title;
+  String _getWeekday(int weekday) {
+    switch (weekday) {
+      case 1:
+        return 'Monday';
+      case 2:
+        return 'Tuesday';
+      case 3:
+        return 'Wednesday';
+      case 4:
+        return 'Thursday';
+      case 5:
+        return 'Friday';
+      case 6:
+        return 'Saturday';
+      case 7:
+        return 'Sunday';
+      default:
+        return '';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,94 +72,124 @@ class MyHomePage extends StatelessWidget {
           ),
         ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            const Text(
-              'Deal with your meal in much easier way.',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => RecipePage(currentUser: currentUser),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: <Widget>[
+                const SizedBox(height: 20),
+                Text(
+                  '${DateTime.now().toLocal().toString().split(" ")[0]} - ${_getWeekday(DateTime.now().weekday)}',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    color: Color.fromARGB(255, 7, 7, 7),
                   ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 30,
-                  vertical: 50,
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(Icons.food_bank_rounded, size: 55),
-                  SizedBox(width: 10),
-                  Text('Recipes', style: TextStyle(fontSize: 35)),
-                ],
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const GroceriesPage(),
+                const SizedBox(height: 20),
+                Text(
+                  '${currentUser.name}, Every great meal begins here.!',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
                   ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 30,
-                  vertical: 50,
+                  textAlign: TextAlign.center,
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
+                const SizedBox(height: 8),
+                const SizedBox(height: 20),
+                const Text(
+                  'Plan. Prep. Enjoy.',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                  textAlign: TextAlign.center,
                 ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(Icons.trolley, size: 55),
-                  SizedBox(width: 10),
-                  Text('Groceries', style: TextStyle(fontSize: 35)),
-                ],
-              ),
+                const SizedBox(height: 30),
+
+                // Recipes Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => RecipePage(currentUser: currentUser),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.food_bank_rounded, size: 30),
+                    label: const Text(
+                      'Recipes',
+                      style: TextStyle(fontSize: 24),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Groceries Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) =>
+                                  GroceriesPage(userId: currentUser.id!),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.shopping_cart, size: 30),
+                    label: const Text(
+                      'Groceries',
+                      style: TextStyle(fontSize: 24),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Favorite Recipes Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const FavoritePage(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.favorite, size: 30),
+                    label: const Text(
+                      'Favorite Recipes',
+                      style: TextStyle(fontSize: 24),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 30),
+              ],
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const FavoritePage()),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 30,
-                  vertical: 30,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(Icons.favorite, size: 55),
-                  SizedBox(width: 10),
-                  Text('Favorite Recipes', style: TextStyle(fontSize: 35)),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

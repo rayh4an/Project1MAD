@@ -162,10 +162,11 @@ class _RecipePageState extends State<RecipePage> {
   final Color backgroundColor = const Color.fromARGB(255, 250, 244, 236);
 
   final List<Map<String, dynamic>> favoriteRecipes = [];
+  final Map<String, List<String>> groceryMap = {};
   final List<String> groceryList = [];
   final Set<String> favoritedRecipeNames = {};
   final Set<String> groceryIngredientKeys = {};
-
+  Set<String> groceryAddedRecipeNames = {};
   void _toggleFavorite(Map<String, dynamic> recipe) {
     final name = recipe['name'];
     setState(() {
@@ -183,30 +184,58 @@ class _RecipePageState extends State<RecipePage> {
     });
   }
 
-  void _toggleGroceries(String ingredients) {
-    final key = ingredients.trim();
+  void _toggleGroceries(String dishName, String ingredients) async {
     final items = ingredients.split(',').map((e) => e.trim()).toList();
-    setState(() {
-      if (groceryIngredientKeys.contains(key)) {
-        groceryIngredientKeys.remove(key);
-        groceryList.removeWhere((item) => items.contains(item));
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Removed from groceries')));
-      } else {
-        groceryIngredientKeys.add(key);
-        groceryList.addAll(items);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Added to groceries')));
+
+    if (groceryAddedRecipeNames.contains(dishName)) {
+      // REMOVE from database and tracking set
+      for (var item in items) {
+        await DatabaseHelper.instance.removeGroceryItem(
+          widget.currentUser.id!,
+          dishName,
+          item,
+        );
       }
-    });
+      setState(() {
+        groceryAddedRecipeNames.remove(dishName);
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Removed $dishName from groceries')),
+      );
+    } else {
+      // ADD to database and tracking set
+      for (var item in items) {
+        await DatabaseHelper.instance.addGroceryItem(
+          widget.currentUser.id!,
+          dishName,
+          item,
+        );
+      }
+      setState(() {
+        groceryAddedRecipeNames.add(dishName);
+      });
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Added $dishName to groceries')));
+    }
   }
 
   @override
   void initState() {
     super.initState();
     _loadCustomRecipes();
+    _loadUserGroceries(); // add this line
+  }
+
+  Future<void> _loadUserGroceries() async {
+    final data = await DatabaseHelper.instance.getGroceriesByUser(
+      widget.currentUser.id!,
+    );
+    setState(() {
+      groceryAddedRecipeNames = data.keys.toSet(); // only store recipe names
+    });
   }
 
   Future<void> _loadCustomRecipes() async {
@@ -534,33 +563,24 @@ class _RecipePageState extends State<RecipePage> {
                                       ElevatedButton.icon(
                                         onPressed:
                                             () => _toggleGroceries(
+                                              recipe['name'],
                                               recipe['ingredients'],
                                             ),
-                                        icon: Icon(
+                                        icon: const Icon(
                                           Icons.shopping_cart,
-                                          color: Colors.white,
+                                          color: Colors.black,
                                         ),
-                                        label: Text(
+                                        label: const Text(
                                           'Groceries',
                                           style: TextStyle(color: Colors.black),
                                         ),
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor:
-                                              groceryIngredientKeys.contains(
-                                                    recipe['ingredients'],
+                                              groceryAddedRecipeNames.contains(
+                                                    recipe['name'],
                                                   )
-                                                  ? const Color.fromARGB(
-                                                    255,
-                                                    101,
-                                                    239,
-                                                    106,
-                                                  )
-                                                  : const Color.fromARGB(
-                                                    255,
-                                                    124,
-                                                    124,
-                                                    124,
-                                                  ),
+                                                  ? Colors.green
+                                                  : Colors.grey[300],
                                         ),
                                       ),
                                     ],
