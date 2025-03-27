@@ -3,7 +3,17 @@ import 'database_helper.dart';
 
 class RecipePage extends StatefulWidget {
   final User currentUser;
-  const RecipePage({super.key, required this.currentUser});
+  final void Function(Map<String, dynamic>) onToggleFavorite;
+  final List<Map<String, dynamic>> favoriteRecipes;
+  final Set<String> favoritedRecipeNames;
+
+  const RecipePage({
+    super.key,
+    required this.currentUser,
+    required this.onToggleFavorite,
+    required this.favoriteRecipes,
+    required this.favoritedRecipeNames,
+  });
 
   @override
   State<RecipePage> createState() => _RecipePageState();
@@ -163,24 +173,12 @@ class _RecipePageState extends State<RecipePage> {
 
   final List<Map<String, dynamic>> favoriteRecipes = [];
   final List<String> groceryList = [];
-  final Set<String> favoritedRecipeNames = {};
+
   final Set<String> groceryIngredientKeys = {};
 
   void _toggleFavorite(Map<String, dynamic> recipe) {
-    final name = recipe['name'];
-    setState(() {
-      if (favoritedRecipeNames.contains(name)) {
-        favoritedRecipeNames.remove(name);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Removed from favorites')));
-      } else {
-        favoritedRecipeNames.add(name);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Added to favorites')));
-      }
-    });
+    widget.onToggleFavorite(recipe);
+    setState(() {}); // to refresh the UI (icon state)
   }
 
   void _toggleGroceries(String ingredients) {
@@ -500,9 +498,7 @@ class _RecipePageState extends State<RecipePage> {
                                         onPressed:
                                             () => _toggleFavorite(recipe),
                                         icon: Icon(
-                                          favoritedRecipeNames.contains(
-                                                recipe['name'],
-                                              )
+                                          widget.favoritedRecipeNames.contains(recipe['name'])
                                               ? Icons.favorite
                                               : Icons.favorite_border,
                                           color: Colors.white,
@@ -513,9 +509,7 @@ class _RecipePageState extends State<RecipePage> {
                                         ),
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor:
-                                              favoritedRecipeNames.contains(
-                                                    recipe['name'],
-                                                  )
+                                              widget.favoritedRecipeNames.contains(recipe['name'])
                                                   ? const Color.fromARGB(
                                                     255,
                                                     224,

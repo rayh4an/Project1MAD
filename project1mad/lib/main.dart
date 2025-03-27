@@ -27,19 +27,49 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyHomePage extends StatelessWidget {
+class MyHomePage extends StatefulWidget {
   final User currentUser;
+  final String title;
 
   const MyHomePage({super.key, required this.title, required this.currentUser});
 
-  final String title;
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  final List<Map<String, dynamic>> favoriteRecipes = [];
+  final Set<String> favoritedRecipeNames = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFavorites();
+  }
+
+  void _toggleFavorite(Map<String, dynamic> recipe) async {
+    final name = recipe['name'];
+    final db = DatabaseHelper.instance;
+
+    setState(() {
+      if (favoritedRecipeNames.contains(name)) {
+        favoritedRecipeNames.remove(name);
+        favoriteRecipes.removeWhere((r) => r['name'] == name);
+        db.removeFavorite(widget.currentUser.id!, name);
+      } else {
+        favoritedRecipeNames.add(name);
+        favoriteRecipes.add(recipe);
+        db.addFavorite(widget.currentUser.id!, recipe);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(title),
+        title: Text(widget.title),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -65,7 +95,12 @@ class MyHomePage extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => RecipePage(currentUser: currentUser),
+                    builder: (context) => RecipePage(
+                      currentUser: widget.currentUser,
+                      onToggleFavorite: _toggleFavorite,
+                      favoriteRecipes: favoriteRecipes,
+                      favoritedRecipeNames: favoritedRecipeNames,
+                    ),
                   ),
                 );
               },
@@ -118,7 +153,13 @@ class MyHomePage extends StatelessWidget {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const FavoritePage()),
+                  MaterialPageRoute(
+                    builder: (context) => FavoritePage(
+                      favoriteRecipes: favoriteRecipes,
+                      toggleFavorite: _toggleFavorite,
+                      favoritedRecipeNames: favoritedRecipeNames,
+                    ),
+                  ),
                 );
               },
               style: ElevatedButton.styleFrom(
@@ -144,4 +185,18 @@ class MyHomePage extends StatelessWidget {
       ),
     );
   }
+  void _loadFavorites() async {
+    final db = DatabaseHelper.instance;
+    final loadedFavorites = await db.getFavorites(widget.currentUser.id!);
+    print("Loaded favorites: ${loadedFavorites.map((r) => r['name'])}");
+    setState(() {
+      favoriteRecipes.clear();
+      favoritedRecipeNames.clear();
+      favoriteRecipes.addAll(loadedFavorites);
+      favoritedRecipeNames.addAll(
+        loadedFavorites.map((r) => r['name'] as String),
+      );
+    });
+  }
+
 }

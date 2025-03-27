@@ -57,13 +57,15 @@ class _LoginPageState extends State<LoginPage> {
         _showError('Invalid email or password');
         return;
       }
+      print("Logged in user ID: ${user.id}");
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder:
-              (_) =>
-                  MyHomePage(title: 'Welcome ${user.name}', currentUser: user),
+          builder: (_) => MyHomePage(
+            title: 'Welcome ${user.name}',
+            currentUser: user,
+          ),
         ),
       );
     }

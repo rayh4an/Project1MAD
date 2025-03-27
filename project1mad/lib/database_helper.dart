@@ -122,6 +122,18 @@ class DatabaseHelper {
         FOREIGN KEY (userId) REFERENCES $userTable(id)
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE favorites (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userId INTEGER NOT NULL,
+        recipeName TEXT NOT NULL,
+        recipeIngredients TEXT,
+        recipePrepTime TEXT,
+        recipeInstruction TEXT
+      )
+    ''');
+
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -204,4 +216,43 @@ class DatabaseHelper {
     final db = await database;
     return await db.delete(userTable, where: 'id = ?', whereArgs: [id]);
   }
+
+  Future<void> addFavorite(int userId, Map<String, dynamic> recipe) async {
+    final db = await database;
+    await db.insert('favorites', {
+      'userId': userId,
+      'recipeName': recipe['name'],
+      'recipeIngredients': recipe['ingredients'],
+      'recipePrepTime': recipe['prepTime'],
+      'recipeInstruction': recipe['instruction'],
+    });
+  }
+
+  Future<void> removeFavorite(int userId, String recipeName) async {
+    final db = await database;
+    await db.delete(
+      'favorites',
+      where: 'userId = ? AND recipeName = ?',
+      whereArgs: [userId, recipeName],
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getFavorites(int userId) async {
+    final db = await database;
+    final result = await db.query(
+      'favorites',
+      where: 'userId = ?',
+      whereArgs: [userId],
+    );
+
+    return result.map((row) {
+      return {
+        'name': row['recipeName'],
+        'ingredients': row['recipeIngredients'],
+        'prepTime': row['recipePrepTime'],
+        'instruction': row['recipeInstruction'],
+      };
+    }).toList();
+  }
+  
 }
