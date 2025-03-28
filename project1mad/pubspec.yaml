@@ -62,6 +62,11 @@ flutter_icons:
 flutter:
   assets:
     - assets/logo.png
+    - assets/American/
+    - assets/European/
+    - assets/Asian/
+    - assets/African/
+
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

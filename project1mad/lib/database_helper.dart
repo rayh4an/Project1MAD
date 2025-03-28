@@ -71,10 +71,10 @@ class User {
   }
 }
 
-/// === DATABASE HELPER ===
+//Database
 class DatabaseHelper {
   static const _databaseName = "app_database.db";
-  static const _databaseVersion = 4; // 🔼 Upgraded from 1 to 2
+  static const _databaseVersion = 4;
 
   static const customRecipeTable = 'custom_recipes';
   static const userTable = 'users';
@@ -191,13 +191,13 @@ class DatabaseHelper {
   Future<void> deleteRecipeById(int id) async {
     final db = await database;
     await db.delete(
-      customRecipeTable, // ✅ use your actual table name here
+      customRecipeTable,
       where: 'id = ?',
       whereArgs: [id],
     );
   }
 
-  // === User CRUD ===
+//CRUD 
   Future<int> insertUser(User user) async {
     final db = await database;
     return await db.insert(userTable, user.toMap());
