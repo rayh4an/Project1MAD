@@ -464,7 +464,11 @@ class _RecipePageState extends State<RecipePage> {
                 _loadCustomRecipes();
 
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Recipe updated!')),
+                  const SnackBar(
+                    content: Text(
+                      'Recipe updated! Add to grocery or favorite, again',
+                    ),
+                  ),
                 );
               },
               child: const Text('Save'),
@@ -629,7 +633,7 @@ class _RecipePageState extends State<RecipePage> {
                                       const SizedBox(height: 4),
                                       ...recipe['instruction']
                                           .toString()
-                                          .split('.')
+                                          .split(',')
                                           .where(
                                             (step) => step.trim().isNotEmpty,
                                           )
@@ -689,7 +693,12 @@ class _RecipePageState extends State<RecipePage> {
                                                 ),
                                             icon: const Icon(
                                               Icons.shopping_cart,
-                                              color: Colors.black,
+                                              color: Color.fromARGB(
+                                                255,
+                                                255,
+                                                255,
+                                                255,
+                                              ),
                                             ),
                                             label: const Text(
                                               'Groceries',
