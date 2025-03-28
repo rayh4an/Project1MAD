@@ -13,7 +13,8 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _nameController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
 
   bool _isRegistering = false;
 
@@ -28,7 +29,10 @@ class _LoginPageState extends State<LoginPage> {
 
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
-    final name = _nameController.text.trim();
+    final firstName = _firstNameController.text.trim();
+    final lastName = _lastNameController.text.trim();
+    final fullName = "$firstName $lastName";
+
     final db = DatabaseHelper.instance;
 
     if (_isRegistering) {
@@ -38,19 +42,11 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
 
-      final user = User(name: name, email: email, password: password);
-      final userId = await db.insertUser(user);
+      final user = User(name: fullName, email: email, password: password);
+      await db.insertUser(user);
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder:
-              (_) => MyHomePage(
-                title: '$name ($email)',
-                currentUser: user.copyWith(id: userId),
-              ),
-        ),
-      );
+      _showConfirmation('Registration successful! Please log in.');
+      _toggleMode();
     } else {
       final user = await db.getUserByEmail(email);
       if (user == null || user.password != password) {
@@ -86,66 +82,124 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(_isRegistering ? 'Register' : 'Login')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            shrinkWrap: true,
-            children: [
-              if (_isRegistering)
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Name'),
-                  validator:
-                      (value) => value!.isEmpty ? 'Enter your name' : null,
-                ),
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
-                keyboardType: TextInputType.emailAddress,
-                validator:
-                    (value) => value!.isEmpty ? 'Enter your email' : null,
-              ),
-              TextFormField(
-                controller: _passwordController,
-                decoration: const InputDecoration(labelText: 'Password'),
-                obscureText: true,
-                validator:
-                    (value) => value!.isEmpty ? 'Enter your password' : null,
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _submit,
-                child: Text(_isRegistering ? 'Register' : 'Login'),
-              ),
+  void _showConfirmation(String message) {
+    showDialog(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            title: const Text('Success'),
+            content: Text(message),
+            actions: [
               TextButton(
-                onPressed: _toggleMode,
-                child: Text(
-                  _isRegistering
-                      ? 'Already have an account? Login'
-                      : 'No account? Register',
-                ),
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
               ),
             ],
           ),
-        ),
-      ),
     );
   }
-}
 
-extension on User {
-  User copyWith({int? id, String? name, String? email, String? password}) {
-    return User(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      email: email ?? this.email,
-      password: password ?? this.password,
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 242, 234, 234),
+      appBar: AppBar(
+        title: Text(_isRegistering ? 'Register' : 'WELCOME BACK!'),
+        backgroundColor: const Color.fromARGB(255, 229, 158, 158),
+      ),
+      body: Center(
+        child: Card(
+          margin: const EdgeInsets.all(20),
+          elevation: 8,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  if (_isRegistering) ...[
+                    TextFormField(
+                      controller: _firstNameController,
+                      decoration: const InputDecoration(
+                        labelText: 'First Name',
+                        prefixIcon: Icon(Icons.person),
+                      ),
+                      validator:
+                          (value) =>
+                              value!.isEmpty ? 'Enter your first name' : null,
+                    ),
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: _lastNameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Last Name',
+                        prefixIcon: Icon(Icons.person_outline),
+                      ),
+                      validator:
+                          (value) =>
+                              value!.isEmpty ? 'Enter your last name' : null,
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: const InputDecoration(
+                      labelText: 'Email',
+                      prefixIcon: Icon(Icons.email),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    validator:
+                        (value) => value!.isEmpty ? 'Enter your email' : null,
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: _passwordController,
+                    decoration: const InputDecoration(
+                      labelText: 'Password',
+                      prefixIcon: Icon(Icons.lock),
+                    ),
+                    obscureText: true,
+                    validator:
+                        (value) =>
+                            value!.isEmpty ? 'Enter your password' : null,
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _submit,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 229, 158, 158),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: Text(
+                      _isRegistering ? 'Register' : 'Login',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextButton(
+                    onPressed: _toggleMode,
+                    child: Text(
+                      _isRegistering
+                          ? 'Already have an account? Login'
+                          : 'No account? Register',
+                      style: const TextStyle(
+                        color: Color.fromARGB(255, 0, 0, 0),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
