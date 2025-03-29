@@ -68,7 +68,7 @@ final Map<String, List<Map<String, dynamic>>> recipeByCategory = {
       'instruction':
           'Cut potatoes into fries and soak in water for 30 minutes. Drain and pat dry. Heat oil and fry potatoes until golden. In a bowl, mix flour, baking powder, salt, and beer to make batter. Dip fish into batter and fry until crispy. Serve the fish alongside fries and tartar sauce.',
       'prepTime': '40 mins',
-      'ingredients': 'Cod fillets, Potatoes, Flour, Baking powder, Beer, Salt, Oil',
+      'ingredients': 'Fish fillets, Potatoes, Flour, Baking powder, Beer, Salt, Oil',
       'imagePath': 'assets/European/FishChips.png',
     },
   ],
@@ -340,30 +340,34 @@ class _RecipePageState extends State<RecipePage> {
       builder: (context) {
         return AlertDialog(
           title: const Text('Add New Recipe'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: recipeNameController,
-                  decoration: const InputDecoration(labelText: 'Recipe Name'),
-                ),
-                TextField(
-                  controller: prepTimeController,
-                  decoration: const InputDecoration(
-                    labelText: 'Preparation Time',
+          content: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.9,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: recipeNameController,
+                    decoration: const InputDecoration(labelText: 'Recipe Name'),
                   ),
-                ),
-                TextField(
-                  controller: ingredientsController,
-                  decoration: const InputDecoration(labelText: 'Ingredients'),
-                ),
-                TextField(
-                  controller: instructionController,
-                  decoration: const InputDecoration(labelText: 'Instructions'),
-                  maxLines: 3,
-                ),
-              ],
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: prepTimeController,
+                    decoration: const InputDecoration(labelText: 'Preparation Time'),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: ingredientsController,
+                    decoration: const InputDecoration(labelText: 'Ingredients'),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: instructionController,
+                    decoration: const InputDecoration(labelText: 'Instructions'),
+                    maxLines: 3,
+                  ),
+                ],
+              ),
             ),
           ),
           actions: [
@@ -559,37 +563,29 @@ class _RecipePageState extends State<RecipePage> {
                 children:
                     categories.map((category) {
                       final allRecipes = recipeByCategory[category]!;
-                      final filteredRecipes =
-                          category == 'Custom'
-                              ? allRecipes
-                              : allRecipes.where((recipe) {
-                                final ingredients =
-                                    recipe['ingredients']
-                                        .toString()
-                                        .toLowerCase();
-                                if (_filterOption == FilterOption.vegetarian) {
-                                  return !ingredients.contains('beef') &&
-                                      !ingredients.contains('chicken') &&
-                                      !ingredients.contains('mutton') &&
-                                      !ingredients.contains('fish') &&
-                                      !ingredients.contains('cod') &&
-                                      !ingredients.contains('shrimp') &&
-                                      !ingredients.contains('bacon') &&
-                                      !ingredients.contains('meat');
-                                } else if (_filterOption ==
-                                    FilterOption.nonVegetarian) {
-                                  return ingredients.contains('beef') ||
-                                      ingredients.contains('chicken') ||
-                                      ingredients.contains('mutton') ||
-                                      ingredients.contains('fish') ||
-                                      ingredients.contains('cod') ||
-                                      ingredients.contains('shrimp') ||
-                                      ingredients.contains('bacon') ||
-                                      ingredients.contains('meat');
-                                }
-                                return true;
-                              }).toList();
-
+                      final filteredRecipes = allRecipes.where((recipe) {
+                        final ingredients = recipe['ingredients']
+                            .toString()
+                            .toLowerCase();
+                        if (_filterOption == FilterOption.vegetarian) {
+                          return !ingredients.contains('beef') &&
+                              !ingredients.contains('chicken') &&
+                              !ingredients.contains('mutton') &&
+                              !ingredients.contains('fish') &&
+                              !ingredients.contains('shrimp') &&
+                              !ingredients.contains('bacon') &&
+                              !ingredients.contains('meat');
+                        } else if (_filterOption == FilterOption.nonVegetarian) {
+                          return ingredients.contains('beef') ||
+                              ingredients.contains('chicken') ||
+                              ingredients.contains('mutton') ||
+                              ingredients.contains('fish') ||
+                              ingredients.contains('shrimp') ||
+                              ingredients.contains('bacon') ||
+                              ingredients.contains('meat');
+                        }
+                        return true;
+                      }).toList();
                       return ExpansionTile(
                         title: Text(
                           category,

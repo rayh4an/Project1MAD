@@ -15,7 +15,7 @@ class FavoritePage extends StatefulWidget {
 class _FavoritePageState extends State<FavoritePage> {
   FilterOption _filterOption = FilterOption.all;
   Set<String> favoritedRecipeNames = {};
-  Map<String, Map<String, dynamic>> allRecipes = {}; // name -> details
+  Map<String, Map<String, dynamic>> allRecipes = {};
 
   @override
   void initState() {
@@ -169,6 +169,17 @@ class _FavoritePageState extends State<FavoritePage> {
                   child: ExpansionTile(
                     title: Text(name),
                     children: [
+                      if (recipe.containsKey('imagePath'))
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.asset(
+                              recipe['imagePath'],
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
                       ListTile(
                         title: Text("Prep Time: ${recipe['prepTime']}"),
                         subtitle: Column(
@@ -176,9 +187,7 @@ class _FavoritePageState extends State<FavoritePage> {
                           children: [
                             Text(
                               "Ingredients: ${recipe['ingredients']}",
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: const TextStyle(fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 6),
                             const Text(
@@ -193,23 +202,15 @@ class _FavoritePageState extends State<FavoritePage> {
                                 .asMap()
                                 .entries
                                 .map(
-                                  (entry) => Text(
-                                    "${entry.key + 1}. ${entry.value.trim()}",
-                                  ),
+                                  (entry) => Text("${entry.key + 1}. ${entry.value.trim()}"),
                                 ),
                             const SizedBox(height: 10),
                             Align(
                               alignment: Alignment.centerRight,
                               child: TextButton.icon(
                                 onPressed: () => _unfavorite(name),
-                                icon: const Icon(
-                                  Icons.delete,
-                                  color: Colors.red,
-                                ),
-                                label: const Text(
-                                  "Remove Favorite",
-                                  style: TextStyle(color: Colors.red),
-                                ),
+                                icon: const Icon(Icons.delete, color: Colors.red),
+                                label: const Text("Remove Favorite", style: TextStyle(color: Colors.red)),
                               ),
                             ),
                           ],

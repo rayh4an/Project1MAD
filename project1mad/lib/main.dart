@@ -104,7 +104,7 @@ class MyHomePage extends StatelessWidget {
                 ),
                 const SizedBox(height: 30),
 
-                // Recipes Button
+// Recipes
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
@@ -132,7 +132,7 @@ class MyHomePage extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                // Groceries Button
+// Groceries
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
@@ -161,7 +161,7 @@ class MyHomePage extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                // Favorite Recipes Button
+//Favorite
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
