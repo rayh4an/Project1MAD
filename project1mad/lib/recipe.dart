@@ -464,7 +464,11 @@ class _RecipePageState extends State<RecipePage> {
                 _loadCustomRecipes();
 
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Recipe updated!')),
+                  const SnackBar(
+                    content: Text(
+                      'Recipe updated! Add to grocery or favorite, again',
+                    ),
+                  ),
                 );
               },
               child: const Text('Save'),
@@ -606,6 +610,17 @@ class _RecipePageState extends State<RecipePage> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
+                                    if (category != 'Custom' && recipe.containsKey('imagePath'))
+                                      Padding(
+                                        padding: const EdgeInsets.only(bottom: 8.0),
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: Image.asset(
+                                            recipe['imagePath'],
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
                                       Text(
                                         "Preparation time: ${recipe['prepTime']}",
                                         style: const TextStyle(
@@ -629,7 +644,7 @@ class _RecipePageState extends State<RecipePage> {
                                       const SizedBox(height: 4),
                                       ...recipe['instruction']
                                           .toString()
-                                          .split('.')
+                                          .split(',')
                                           .where(
                                             (step) => step.trim().isNotEmpty,
                                           )
@@ -689,7 +704,12 @@ class _RecipePageState extends State<RecipePage> {
                                                 ),
                                             icon: const Icon(
                                               Icons.shopping_cart,
-                                              color: Colors.black,
+                                              color: Color.fromARGB(
+                                                255,
+                                                255,
+                                                255,
+                                                255,
+                                              ),
                                             ),
                                             label: const Text(
                                               'Groceries',
@@ -710,33 +730,6 @@ class _RecipePageState extends State<RecipePage> {
                                                         124,
                                                         124,
                                                       ),
-                                            ),
-                                          ),
-                                          ElevatedButton.icon(
-                                            onPressed: () {
-                                              showDialog(
-                                                context: context,
-                                                builder: (_) => AlertDialog(
-                                                  title: Text(recipeName),
-                                                  content: recipe.containsKey('imagePath')
-                                                      ? Image.asset(recipe['imagePath'])
-                                                      : const Text('No image available.'),
-                                                  actions: [
-                                                    TextButton(
-                                                      onPressed: () => Navigator.pop(context),
-                                                      child: const Text('Close'),
-                                                    ),
-                                                  ],
-                                                ),
-                                              );
-                                            },
-                                            icon: const Icon(Icons.photo),
-                                            label: const Text(
-                                              'Photo',
-                                              style: TextStyle(color: Colors.black),
-                                            ),
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: const Color.fromARGB(255, 124, 124, 124),
                                             ),
                                           ),
                                         ],
